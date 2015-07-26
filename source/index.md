@@ -3,11 +3,11 @@ title: Wazza documentation
 
 language_tabs:
   - shell
-  - smalltalk
+  - objective_c
   - java
 
 toc_footers:
-  - <a href='#'>Sign Up for a Developer Key</a>
+  - <a href='https://www.wazza.io/register'>Sign Up for a Developer Key</a>
 
 includes:
   - errors
@@ -17,9 +17,19 @@ search: true
 
 # Introduction
 
+> Code will appear here!
+
 The Wazza API is organized around REST. Our API is designed to have predictable, resource-oriented URLs and to use HTTP response codes to indicate API errors. We use built-in HTTP features, like HTTP authentication and HTTP verbs, which can be understood by off-the-shelf HTTP clients. JSON will be returned in all responses from the API, including errors (though if you're using API bindings, we will convert the response to the appropriate language-specific object).
 
-We have language SDKs in Shell, objective-C and Java. You can view code examples in the dark area to the right, and you can switch the programming language of the examples with the tabs in the top right.
+We have language SDKs in Shell, objective_c and Java. You can view code examples in the dark area to the right, and you can switch the programming language of the examples with the tabs in the top right.
+
+## First time use
+
+Head on to [login] page and enter your credentials.
+You will be redirected to the Dashboard page and prompted to add a new Mobile Application.
+After this, Wazza will start to crunch data and it will soon be available here.
+If you click in any of the available applications, you will be able to see more KPIs.
+In the same way, if you click any of these KPIs, you will get access to detailed information including charts.
 
 # Registration
 
@@ -35,7 +45,7 @@ All API requests must be made over HTTPS. Calls made over plain HTTP will fail. 
 
 > To authorize, use this code:
 
-```smalltalk
+```objective_c
 [WazzaAnalytics initWithCredentials:@@"Company Name" :@@"App Name" :@@"API token"];
 [WazzaAnalytics setDelegate:self];
 ```
@@ -68,7 +78,7 @@ This header looks like this:
 
 ### Success Response:
 
-* **Code:** 200
+* **Code:** 200 OK
 * **Content:**
   ```json
     {
@@ -78,8 +88,8 @@ This header looks like this:
 
 ### Error Response:
 
-  * **Code:** 404 NOT FOUND
-  * **Content:** `{}`
+* **Code:** 404 NOT FOUND
+* **Content:** `{}`
 
 
 <aside class="notice">
@@ -92,25 +102,17 @@ You must replace <code>API_KEY</code> with your personal API key.
 ## Save session
 Saves information regarding one or more sessions.
 
-> To authorize, use this code:
+> To record a session use this code:
 
-```smalltalk
-[WazzaAnalytics initWithCredentials:@@"Company Name" :@@"App Name" :@@"API token"];
-[WazzaAnalytics setDelegate:self];
+```objective_c
+  [[WazzaAnalytics sharedInstance] endSession];
 ```
 
 ```java
-// Keep in mind you will still need to open and close sessions. Further information can be found in SDKs Integration documentation.
-Wazza wazza = Wazza.init(this, "API_KEY", "Application Name", "Company Name");
+  wazza.sessionClose();
 ```
 
-```shell
-# With shell, you can just pass the correct header with each request
-curl "https://www.wazza.io/api/auth/"
-  -H "SDK-TOKEN: API_KEY"
-```
-
-> The above command returns JSON structured like this:
+> The sent JSON is structured like this:
 
 ```json
     {
@@ -143,7 +145,7 @@ curl "https://www.wazza.io/api/auth/"
 
 ### Success Response:
 
-* **Code:** 200
+* **Code:** 200 OK
 * **Content:**
   ```json
     {}
@@ -151,7 +153,7 @@ curl "https://www.wazza.io/api/auth/"
 
 ### Error Response:
 
-  * **Code:** 404 NOT FOUND
+* **Code:** 404 NOT FOUND
 * **Content:**
   ```json
     {}
@@ -162,75 +164,302 @@ curl "https://www.wazza.io/api/auth/"
 Remember — the API Key must always be included!
 </aside>
 
-## Payment
+# Payment
 
-## Analytics
+## Save Payment
 
-The SDKs are designed to feed information into our engine and not to collect it; therefore, any request shall be made using the REST API directly.
+> In order to save a payment, you need to:
+
+```java
+  wazza.purchase("SKU");
+```
+
+```objective_c
+  [[WazzaAnalytics sharedInstance] makePurchase:@"PRODUCT_ID"];
+```
+
+Saves information regarding one payment.
+Depending on the payment system, the sent JSON structure will change. In particular, if the payment was made via PayPal, some attributes are added to common structure. In-App Purchase payments have no extra attributes.
+
+> Common payment JSON structure:
+
+  ```json
+    {
+      "paymentSystem": "[int]",
+      "id": "[string]",
+      "itemId": "[string]",
+      "userId": "[string]",
+      "price": "[double]",
+      "time": "[Date]",
+      "deviceInfo": {
+        "osName": "[string]",
+        "osVersion": "[string]",
+        "deviceModel": "[string]"
+      },
+      "sessionId": "[string]",
+      "success": "[boolean]"
+    }
+  ```
+  
+> PayPal payment JSON structure:
+  
+  ```json
+    {
+      "currencyCode": "[string]",
+      "shortDescription": "[string]",
+      "intent": "[string]",
+      "processable": "[boolean]",
+      "responseID": "[string]",
+      "state": "[string]",
+      "responseType": "[string]",
+      "quantity": "[int]"
+    }
+  ```
+
+### HTTP Request
+
+`POST https://www.wazza.io/api/purchase/`
+
+### Success Response:
+
+* **Code:** 200 OK
+* **Content:**
+  ```json
+    {}
+  ```
+
+### Error Response:
+
+* **Code:** 404 NOT FOUND
+* **Content:**
+  ```json
+    {
+    "error": "[string]"
+    }
+  ```
+
+## PayPal payment verification
+
+Sends a PayPal payment for verification.
+
+> The sent JSON structure is:
+
+```json
+    {
+      "responseID": "[string]",
+      "price": "[double]",
+      "currencyCode": "[string]"
+    }
+```
+
+### HTTP Request
+
+`POST https://www.wazza.io/api/payment/verify/`
+
+### Success Response:
+
+* **Code:** 200 OK
+* **Content:**
+  ```json
+    {}
+  ```
+
+### Error Response:
+
+* **Code:** 404 NOT FOUND
+* **Content:**
+  ```json
+    {
+    "error": "[string]"
+    }
+  ```
+
+# Analytics
+
+The SDKs are designed to feed information into our engine and not to collect it; therefore, any analytics request shall be made using the REST API directly.
+For each metric, total and detailed queries can be made; the difference boils down to the url the request is sent.
+
+Contact us for a fully detailed information on the available metrics.
+
+> You may find an example for Lifetime Value below:
+
+```shell
+curl "https://www.wazza.io/api/analytics/ltv/total/Wazza/Demo/19-07-2015/26-07-2015"
+  -H "SDK-TOKEN: API_KEY"
+```
+
+> which returns something like:
+
+```json
+  {
+     "value":0.0,
+     "delta":0.0,
+     "previous":0.0,
+     "platforms":[
+        {
+           "platform":"Android",
+           "value":0.0,
+           "delta":0.0,
+           "previous":0.0,
+           "paymentSystems":[
+              {
+                 "system":1,
+                 "value":0.0,
+                 "previous":0.0,
+                 "delta":0.0
+              },
+              {
+                 "system":2,
+                 "value":0.0,
+                 "previous":0.0,
+                 "delta":0.0
+              }
+           ]
+        },
+        {
+           "platform":"iOS",
+           "value":0.0,
+           "delta":0.0,
+           "previous":0.0,
+           "paymentSystems":[
+              {
+                 "system":1,
+                 "value":0.0,
+                 "previous":0.0,
+                 "delta":0.0
+              },
+              {
+                 "system":2,
+                 "value":0.0,
+                 "previous":0.0,
+                 "delta":0.0
+              }
+           ]
+        }
+     ]
+  }
+```
+
+
+### HTTP Request
+
+`GET https://www.wazza.io/api/analytics/{METRIC}/{TYPE}/{COMPANY}/{APP}/{BEGIN}/{END}`
+
+### URL Parameters
+
+Parameter | Description
+--------- | -----------
+METRIC | The metric you want to retrieve
+TYPE | Total (value) or Detailed (a list of the values per day)
+COMPANY | Your company name
+APP | Your app name
+BEGIN | The beginning of the timeframe
+END | The ending of the timeframe
+
+### Success Response:
+
+* **Code:** 200 OK
+* **Content:**
+  ```json
+    {
+       "value": "[number]",
+       "delta": "[number]",
+       "previous": "[number]"
+    }
+  ```
+
+### Error Response:
+
+* **Code:** 404 NOT FOUND
+* **Content:**
+  ```json
+    {
+    "error": "[string]"
+    }
+  ```
 
 # SDKs Integration
 
 The integration process is designed to be as easy as possible with basic setup complete in under 5 minutes.
+Support for other platforms and frameworks is coming. Drop us an e-mail and we may be able to get you early access to new SDKs.
 
-- Android
-    1. Download the Wazza Android SDK.
-     The archive should contain these files:
-      - Wazza_Android_SDK_x.y.z.jar : The library containing Wazza's analytic collection and reporting code (where x.y.x denotes the latest version of Wazza SDK).
-      - ProjectApiKey.txt : This file contains the name of your project and your project's API key. Alternatively, you can also get the key in the Dashboard.
-      - README.pdf : PDF file containing instructions (This exact same information).
+
+The SDK archive should contain these files:
+
+  + Android SDK - Wazza_Android_SDK_x.y.z.jar : The library containing Wazza's analytic collection and reporting code for Android platform.
+
+  + iOS SDK - Wazza_iOS_SDK_x.y.z which contains library .a file and folder with headers for iOS platform
+
+  + ProjectApiKey.txt : This file contains the name of your project and your project's API key. Alternatively, you can also get the key in the Dashboard.
+
+  + README.pdf : PDF file containing instructions (This exact same information).
+
+x.y.x denote the latest version of Wazza SDK. You can download this archive from your dashboard.
+
+## Android
+
+    1. Download the Wazza SDK.
 
     2. Add the Wazza lib to your project
+      
       - If you're using Eclipse, modify your Java Build Path, and choose Add External JAR.
+      
       - If you're using the SDK tools directly, drop it into your libs folder and the ant task will pick it up.
 
     3. Configure your AndroidManifest.xml to:
+
+> The manifest should look like this:
+
+```xml
+  <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="io.wazza.sample"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <uses-sdk
+      android:minSdkVersion="15"
+      android:targetSdkVersion="19"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+  </manifest>
+```
       - Have access to the Internet and allow Wazza SDK to check state of the network connectivity
+
       - You may specify a versionName attribute in the manifest to have data reported under that version name
+      
       - Declare min version of Android OS the application supports. Please note that Wazza supports Android OS versions 15 and above.
 
-        ```xml
-         <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-             package="io.wazza.sample"
-             android:versionCode="1"
-             android:versionName="1.0" >
-         
-        <uses-sdk
-             android:minSdkVersion="15"
-             android:targetSdkVersion="19" />
-             <uses-permission android:name="android.permission.INTERNET" />
-             <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-        </manifest>
-        ```
-
-      {{create gist}}
-
     4. Incorporate the following lines of Wazza code:
-      - For each activity of your application, add:<br>
+      - For each activity of your application, add:
+
         ```java
           import io.wazza.sdk.android.Wazza;
         ```
-        and on onCreate():<br>
+
+        and on onCreate():
+
         ```java
-          Wazza wazza = Wazza.init(this, "API KEY", "Application Name", "Company Name");
+          Wazza wazza = Wazza.init(this, "API_KEY", "Application Name", "Company Name");
           wazza.sessionOpen();
         ```
-        and on onStop():<br>
+
+        and on onStop():
+
         ```java
           wazza.sessionClose();
         ```
-      - Whenever you call the Google In-app Billing service, swap that call with Wazza's one:<br>
+
+      - Whenever you call the Google In-app Billing service, swap that call with Wazza's one:
+
         ```java
           wazza.purchase("SKU");
         ```
 
     That's it. We recommend always calling Wazza from the main (UI) thread. The results are not guaranteed or supported when called from other threads.
 
-- iOS
-    1. Download the Wazza iOS SDK
-     The archive should contain these files:
-      - Wazza code - contains library .a file and folder with headers
-      - ProjectApiKey.txt : This file contains the name of your project and your project's API key. Alternatively, you can also get the key in the Dashboard.
-      - README.pdf : PDF file containing instructions (This exact same information).
+## iOS
+
+    1. Download the Wazza SDK
 
       ![Alt Text](https://s3-eu-west-1.amazonaws.com/wazza-landing-page/ios+doc+-+1.png "Figure 1 - Wazza content")
 
@@ -244,73 +473,30 @@ The integration process is designed to be as easy as possible with basic setup c
 
     4. Code setup.
 
-      The first step you need to do is to initialize Wazza's singleton with your API token (you can get it on app setting of Wazza's dashboard).
+You need to initialize Wazza's singleton with your API token (you can get it on app setting of Wazza's dashboard).
 
-      ```objective-c
-      [WazzaAnalytics initWithCredentials:@@"Company Name" :@@"App Name" :@@"API token"];
+    ```objective_c
+      [WazzaAnalytics initWithCredentials:@"Company Name" :@"App Name" :@"API_KEY"];
       [WazzaAnalytics setDelegate:self];
-      ```
-
-      From this moment on, each time you want to use Wazza's singleton, you can use it with:
-
-      ```objective-c
-      [WazzaAnalytics sharedInstance];
-      ```
-
-      Next, you need to put the following code every time a session is closed.
-
-      ```objective-c
-      [[WazzaAnalytics sharedInstance] endSession];
-      ```
-
-      On every **in-app purchase action** you will need to add the following code
-
-      ```objective-c
-      [[WazzaAnalytics sharedInstance] makePurchase:@@"PRODUCT_ID"];
-      ```
-
-    4. Code setup.
-
-    The first step you need to do is to initialize Wazza's singleton with your API token (you can get it on app setting of Wazza's dashboard).
-
-```objective-c
-[WazzaAnalytics initWithCredentials:@"Company Name" :@"App Name" :@"API token"];
-[WazzaAnalytics setDelegate:self];
-```
+    ```
 
 From this moment on, each time you want to use Wazza's singleton, you can use it with:
 
-```objective-c
-[WazzaAnalytics sharedInstance];
-```
+    ```objective_c
+      [WazzaAnalytics sharedInstance];
+    ```
 
 Next, you need to put the following code every time a session is closed.
 
-```objective-c
-[[WazzaAnalytics sharedInstance] endSession];
-```
+    ```objective_c
+      [[WazzaAnalytics sharedInstance] endSession];
+    ```
 
 On every **in-app purchase action** you will need to add the following code
 
-```objective-c
-[[WazzaAnalytics sharedInstance] makePurchase:@"PRODUCT_ID"];
-```
-
-- Other Platforms/frameworks
-
-    The support for other platforms and frameworks is coming. Drop us an e-mail and we may be able to get you early access to new SDKs.
-
-### First time use
-
- Head on to [login] page and enter your credentials.
-
- You will be redirected to the Dashboard page and prompted to add a new Mobile Application.
-
- After this, Wazza will start to crunch data and it will soon be available here.
-
- If you click in any of the available applications, you will be able to see more KPIs.
-
- In the same way, if you click any of these KPIs, you will get access to detailed information including charts.
+    ```objective_c
+      [[WazzaAnalytics sharedInstance] makePurchase:@"PRODUCT_ID"];
+    ```
 
 [register]:https://www.wazza.io/register
 [login]:https://www.wazza.io/login
